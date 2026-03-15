@@ -1,27 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,
     initial-scale=1.0">
-    <title>Stopwatch</title>
+    <title>Cubing Video Stopwatch</title>
     <link rel="stylesheet" href="style.css">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;500;900&display=swap" rel="stylesheet">    
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;500;900&display=swap" rel="stylesheet"> -->
+    <!-- <script src="script.js" async></script> -->
 </head>
-<body>
 
-    <div id="timer">00:00:00</div>
+<body>
+    <div id="timer">
+        <span class="digit" id="hour1">0</span>
+        <span class="digit" id="hour2">0</span>
+        <span class="sep" id="hmSep">:</span>
+        <span class="digit" id="min1">0</span>
+        <span class="digit" id="min2">0</span>
+        <span class="sep" id="msSep">:</span>
+        <span class="digit" id="sec1">0</span>
+        <span class="digit" id="sec2">0</span>
+        <span class="sep" id="secDecimalSep">.</span>
+        <span class="digit" id="ds">0</span>
+        <span class="digit" id="cs">0</span>
+        <span class="digit" id="ms">0</span>
+    </div>
+
     <div id="buttons">
         <button id="start">Start</button>
         <button id="stop">Stop</button>
         <button id="reset">Reset</button>
     </div>
-    <script src="script.js"></script>
+    
+    <div id="controls">
+        <div class="control">
+            <label for="delay">Delay before timer starts:</label>
+            <input type="number" id="delay" value="1" min="0" max="999">
+            <label for="delay">seconds</label>
+        </div>
+
+        <div class="control">
+            <label for="stopTimerHours">Stop timer at:</label>
+            <input type="number" id="stopTimerHours" value="0" min="0" max="99" step="1">
+            <label for="stopTimerHours">h</label>
+            <input type="number" id="stopTimerMinutes" value="0" min="0" max="59" step="1">
+            <label for="stopTimerMinutes">m</label>
+            <input type="number" id="stopTimerSeconds" value="6.25" min="0" max="59.999">
+            <label for="stopTimerSeconds">s</label>
+        </div>
+
+        <div class="control">
+            <label for="speedmult">Speed multiplier:</label>
+            <input type="number" id="speedmult" value="1" min="0" max="100">
+        </div>
+
+        <div class="control">
+            <label for="timeformat">Time format:</label>
+            <select id="timeformat" name="timeformat">
+                <option>S</option>
+                <option>S.X</option>
+                <option>S.XX</option>
+                <option>S.XXX</option>
+                <option>SS</option>
+                <option>SS.X</option>
+                <option selected>SS.XX</option>
+                <option>SS.XXX</option>
+                <option>M:SS</option>
+                <option>M:SS.X</option>
+                <option>M:SS.XX</option>
+                <option>M:SS.XXX</option>
+                <option>MM:SS</option>
+                <option>MM:SS.X</option>
+                <option>MM:SS.XX</option>
+                <option>MM:SS.XXX</option>
+                <option>H:MM:SS</option>
+                <option>H:MM:SS.X</option>
+                <option>H:MM:SS.XX</option>
+                <option>H:MM:SS.XXX</option>
+                <option>HH:MM:SS</option>
+                <option>HH:MM:SS.X</option>
+                <option>HH:MM:SS.XX</option>
+                <option>HH:MM:SS.XXX</option>
+            </select>
+        </div>
+
+        <!-- <div class="control">
+            <label for="textcolour">Text colour:</label>
+            <input type="color" id="textcolour" name="textcolour" value="#ffffff">
+        </div>
+        
+        <div class="control">
+            <label for="bgcolour">Background colour:</label>
+            <input type="color" id="bgcolour" name="bgcolour" value="#000000">
+        </div> -->
+    </div>
+    
+    <script src="script.js" ></script>
 </body>
+
 </html>
 
 
