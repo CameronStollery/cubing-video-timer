@@ -23,25 +23,33 @@ const ds = document.getElementById('ds');
 const cs = document.getElementById('cs');
 const ms = document.getElementById('ms');
 
-// milliseconds at which more timer digits will need to be shown, given current format chosen
-let increaseDigitThreshold = 60 * 1000;
-
-let startDelayTime = 0;
-let elapsedDelayTime = 0;
-let delayTime = 1000;
-let startTime = 0;
-let elapsedTime = 0;
-let stopTime = 6250;
-let speedMultiplier = 1;
 let delayTimerInterval;
 let timerInterval;
-let format = 6;
 
-// time components
 let hours = 0;
 let minutes = 0;
 let seconds = 0;
 let mseconds = 0;
+
+let startDelayTime = 0;
+let elapsedDelayTime = 0;
+let startTime = 0;
+let elapsedTime = 0;
+
+// milliseconds at which more timer digits will need to be shown, given current format chosen
+let increaseDigitThreshold = 60 * 1000;
+
+let format;
+updateTimeFormat();     // set initial format from selector value
+
+let delayTime;
+updateDelay();     // set initial delay time from input value
+
+let stopTime;
+updateStopTime();     // set initial stop time from input values
+
+let speedMultiplier;
+updateSpeed();     // set initial speed multiplier from input value
 
 function updateDelay(){
     resetTimer();
@@ -490,13 +498,13 @@ function startDelay(){
 
 function startTimer(){
     startTime = Date.now() - elapsedTime;
-    console.log(startTime);
 
     timerInterval = setInterval( ()=> {
         elapsedTime = (Date.now() - startTime) * speedMultiplier; 
         if (elapsedTime >= stopTime) {
             stopTimer();
             updateTimer(stopTime);
+            startButton.disabled = true;
         } else {
             updateTimer(elapsedTime);
         }
