@@ -2,12 +2,16 @@ const timer = document.getElementById('timer');
 const startButton = document.getElementById('start');
 const stopButton = document.getElementById('stop');
 const resetButton = document.getElementById('reset');
+
+// controls
 const delayInput = document.getElementById('delay');
 const stopInputHours = document.getElementById('stopTimerHours');
 const stopInputMinutes = document.getElementById('stopTimerMinutes');
 const stopInputSeconds = document.getElementById('stopTimerSeconds');
 const speedInput = document.getElementById('speedmult');
 const formatSelector = document.getElementById('timeformat');
+const textColourInput = document.getElementById('textcolour');
+const bgColourInput = document.getElementById('bgcolour');
 
 // timer digits/separators
 const hour1 = document.getElementById('hour1');
@@ -600,5 +604,11 @@ stopInputMinutes.addEventListener('change', updateStopTime);
 stopInputSeconds.addEventListener('change', updateStopTime);
 speedInput.addEventListener('change', updateSpeed);
 formatSelector.addEventListener('change', updateTimeFormat);
+textColourInput.addEventListener('input', () => {
+    timer.style.color = textColourInput.value;
+});
+bgColourInput.addEventListener('input', () => {
+    timer.style.backgroundColor = bgColourInput.value;
+});
 
 // @bycapwan
