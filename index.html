@@ -8,6 +8,7 @@
     initial-scale=1.0">
     <title>Cubing Video Stopwatch</title>
     <link rel="stylesheet" href="style.css">
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide"> -->
 
     <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +41,7 @@
     <div id="controls">
         <div class="control">
             <label for="delay">Delay before timer starts:</label>
-            <input type="number" id="delay" value="1" min="0" max="999">
+            <input type="number" id="delay" value="0" min="0" max="999">
             <label for="delay">seconds</label>
         </div>
 
@@ -56,7 +57,7 @@
 
         <div class="control">
             <label for="speedmult">Speed multiplier:</label>
-            <input type="number" id="speedmult" value="1" min="0" max="100">
+            <input type="number" id="speedmult" value="1" min="0" step="0.1">
         </div>
 
         <div class="control">
@@ -98,8 +99,17 @@
             <label for="bgcolour">Background colour:</label>
             <input type="color" id="bgcolour" name="bgcolour" value="#000000">
         </div> -->
+
+        <!-- <div class="control">    
+            <select id="font-picker">
+                <option value="Arial" class="font-arial">Arial</option>
+                <option value="Courier New" class="font-courier">Courier New</option>
+                <option value="Georgia" class="font-georgia">Georgia</option>
+            </select>
+        </div> -->
+
     </div>
-    
+
     <script src="script.js" ></script>
 </body>
 
