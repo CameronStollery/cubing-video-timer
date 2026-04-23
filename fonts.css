@@ -1,0 +1,216 @@
+/* DSEG font family from https://www.keshikan.net/fonts-e.html */
+@font-face {
+  font-family: "7-Segment Display";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-Regular.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Regular.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "7-Segment Display";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-Italic.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Italic.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "7-Segment Display";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Bold.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "7-Segment Display";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-BoldItalic.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-BoldItalic.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-BoldItalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "7-Segment Display Light";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-Light.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Light.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Light.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "7-Segment Display Light";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-LightItalic.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-LightItalic.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-LightItalic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "7-Segment Display Mini";
+  src: url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Regular.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Regular.woff') format('woff'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "7-Segment Display Mini";
+  src: url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Italic.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Italic.woff') format('woff'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "7-Segment Display Mini";
+  src: url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Bold.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Bold.woff') format('woff'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "7-Segment Display Mini";
+  src: url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-BoldItalic.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-BoldItalic.woff') format('woff'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-BoldItalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "7-Segment Display Mini Light";
+  src: url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Light.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Light.woff') format('woff'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-Light.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "7-Segment Display Mini Light";
+  src: url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-LightItalic.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-LightItalic.woff') format('woff'),
+       url('fonts/DSEG7-Classic-MINI/DSEG7ClassicMini-LightItalic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "14-Segment Display";
+  src: url('fonts/DSEG14-Classic/DSEG14Classic-Regular.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-Regular.woff') format('woff'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "14-Segment Display";
+  src: url('fonts/DSEG14-Classic/DSEG14Classic-Italic.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-Italic.woff') format('woff'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "14-Segment Display";
+  src: url('fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Bold.woff') format('woff'),
+       url('fonts/DSEG7-Classic/DSEG7Classic-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "14-Segment Display";
+  src: url('fonts/DSEG14-Classic/DSEG14Classic-BoldItalic.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-BoldItalic.woff') format('woff'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-BoldItalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "14-Segment Display Light";
+  src: url('fonts/DSEG14-Classic/DSEG14Classic-Light.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-Light.woff') format('woff'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-Light.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "14-Segment Display Light";
+  src: url('fonts/DSEG14-Classic/DSEG14Classic-LightItalic.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-LightItalic.woff') format('woff'),
+       url('fonts/DSEG14-Classic/DSEG14Classic-LightItalic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "14-Segment Display Mini";
+  src: url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Regular.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Regular.woff') format('woff'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "14-Segment Display Mini";
+  src: url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Italic.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Italic.woff') format('woff'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "14-Segment Display Mini";
+  src: url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Bold.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Bold.woff') format('woff'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "14-Segment Display Mini";
+  src: url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-BoldItalic.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-BoldItalic.woff') format('woff'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-BoldItalic.ttf') format('truetype');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "14-Segment Display Mini Light";
+  src: url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Light.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Light.woff') format('woff'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-Light.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "14-Segment Display Mini Light";
+  src: url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-LightItalic.woff2') format('woff2'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-LightItalic.woff') format('woff'),
+       url('fonts/DSEG14-Classic-MINI/DSEG14ClassicMini-LightItalic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}

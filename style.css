@@ -10,10 +10,10 @@ body {
 }
 
 #timer{
+    font-family: '7-Segment Display', monospace, sans-serif;
     background: #000000;
     font-size: 7rem;
     font-weight: 600;
-    /* text-shadow: 2px 2px #5f5f56; */
     color: #ffffff;
     text-align: center;
     margin: 2rem;
