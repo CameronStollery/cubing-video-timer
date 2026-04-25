@@ -8,12 +8,9 @@
     initial-scale=1.0">
     <title>Cubing Video Timer</title>
     <link rel="stylesheet" href="style.css">
-    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide"> -->
-
-    <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;500;900&display=swap" rel="stylesheet"> -->
-    <!-- <script src="script.js" async></script> -->
+    <link rel="stylesheet" href="fonts.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i|Roboto:400,400i,700,700i|Lato:400,400i,700,700i|Poppins:400,400i,700,700i|Inter:400,400i,700,700i&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.6.0/dist/css/tom-select.css">
 </head>
 
 <body>
@@ -33,9 +30,9 @@
     </div>
 
     <div id="buttons">
-        <button id="start">Start</button>
-        <button id="stop">Stop</button>
-        <button id="reset">Reset</button>
+        <button id="start" class="timer-button">Start</button>
+        <button id="stop" class="timer-button">Stop</button>
+        <button id="reset" class="timer-button">Reset</button>
     </div>
     
     <div id="controls">
@@ -65,11 +62,11 @@
             <select id="timeformat" name="timeformat">
                 <option>S</option>
                 <option>S.X</option>
-                <option>S.XX</option>
+                <option selected>S.XX</option>
                 <option>S.XXX</option>
                 <option>SS</option>
                 <option>SS.X</option>
-                <option selected>SS.XX</option>
+                <option>SS.XX</option>
                 <option>SS.XXX</option>
                 <option>M:SS</option>
                 <option>M:SS.X</option>
@@ -92,24 +89,49 @@
 
         <div class="control">
             <label for="textcolour">Text colour:</label>
-            <input type="color" id="textcolour" name="textcolour" value="#ffffff">
+            <input type="color" id="textcolour" name="textcolour" value="#ff0000">
         </div>
         
         <div class="control">
             <label for="bgcolour">Background colour:</label>
             <input type="color" id="bgcolour" name="bgcolour" value="#000000">
         </div>
-
-        <!-- <div class="control">    
+        
+        <div class="control">
+            <label for="font-picker">Timer font:</label>
             <select id="font-picker">
-                <option value="Arial" class="font-arial">Arial</option>
-                <option value="Courier New" class="font-courier">Courier New</option>
-                <option value="Georgia" class="font-georgia">Georgia</option>
+                <option value="Open Sans" data-font="Comic Sans MS">Open Sans</option>
+                <option value="Roboto" data-font="Roboto">Roboto</option>
+                <option value="Lato" data-font="Lato">Lato</option>
+                <option value="Poppins" data-font="Poppins">Poppins</option>
+                <option value="Inter" data-font="Inter">Inter</option>
+                <option value="Segoe UI" data-font="Segoe UI">Segoe UI</option>
+                <option value="Arial" data-font="Arial">Arial</option>
+                <option value="Helvetica" data-font="Helvetica">Helvetica</option>
+                <option value="Verdana" data-font="Verdana">Verdana</option>
+                <option value="Tahoma" data-font="Tahoma">Tahoma</option>
+                <option value="Comic Sans MS" data-font="Comic Sans MS">Comic Sans</option>
+                <option value="Garamond" data-font="Garamond">Garamond</option>
+                <option value="Times New Roman" data-font="Times New Roman">Times New Roman</option>
+                <option value="Courier New" data-font="Courier New">Courier New</option>
+                <option value="7-Segment Display" data-font="7-Segment Display" selected>7-Segment Display</option>
+                <option value="7-Segment Display Mini" data-font="7-Segment Display Mini">7-Segment Display Mini</option>
+                <option value="7-Segment Display Light" data-font="7-Segment Display Light">7-Segment Display Light</option>
+                <option value="7-Segment Display Mini Light" data-font="7-Segment Display Mini Light">7-Segment Display Mini Light</option>
+                <option value="14-Segment Display" data-font="14-Segment Display">14-Segment Display</option>
+                <option value="14-Segment Display Mini" data-font="14-Segment Display Mini">14-Segment Display Mini</option>
+                <option value="14-Segment Display Light" data-font="14-Segment Display Light">14-Segment Display Light</option>
+                <option value="14-Segment Display Mini Light" data-font="14-Segment Display Mini Light">14-Segment Display Mini Light</option>
             </select>
-        </div> -->
-
+        </div>
+        
+        <div class="control">
+            <button id="bold-toggle" class="font-toggle">B</button>
+            <button id="italic-toggle" class="font-toggle active">I</button>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.0/dist/js/tom-select.complete.min.js"></script>
     <script src="script.js" ></script>
 </body>
 
