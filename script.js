@@ -12,6 +12,7 @@ const speedInput = document.getElementById('speedmult');
 const formatSelector = document.getElementById('timeformat');
 const textColourInput = document.getElementById('textcolour');
 const bgColourInput = document.getElementById('bgcolour');
+const timerFontInput = document.getElementById('font-picker');
 
 // timer digits/separators
 const hour1 = document.getElementById('hour1');
@@ -610,5 +611,55 @@ textColourInput.addEventListener('input', () => {
 bgColourInput.addEventListener('input', () => {
     timer.style.backgroundColor = bgColourInput.value;
 });
+timerFontInput.addEventListener('input', () => {
+    timer.style.fontFamily = `"${timerFontInput.value}"`;
+});
+
+// If the time format selector is changed to a TomSelect dropdown, the updateTimeFormat function will need to be updated to get the selected index/value from TomSelect instead of a regular select element. The event listener for the format selector will also need to be updated to listen for the 'change' event from TomSelect.
+// new TomSelect('#timeformat', {});
+
+new TomSelect('#font-picker', {
+    render: {
+        option: function(data, escape) {
+            return `
+                <div style="display:flex; justify-content:space-between;">
+                    <span>${escape(data.text)}</span>
+                    <span style="font-family: '${escape(data.font)}';">12:34:56.7890</span>
+                </div>
+            `;
+        },
+        item: function(data, escape) {
+            return `
+                <div>
+                ${escape(data.text)}
+                </div>
+            `;
+        }
+    }
+});
+
+// Font style toggles (bold/italic)
+const boldToggle = document.getElementById('bold-toggle');
+const italicToggle = document.getElementById('italic-toggle');
+
+let isBold = false;
+let isItalic = true;     // timer starts in italic by default
+
+boldToggle.addEventListener('click', () => {
+    isBold = !isBold;
+    boldToggle.classList.toggle('active');
+    updateFontStyle();
+});
+
+italicToggle.addEventListener('click', () => {
+    isItalic = !isItalic;
+    italicToggle.classList.toggle('active');
+    updateFontStyle();
+});
+
+function updateFontStyle() {
+    timer.style.fontWeight = isBold ? 'bold' : 'normal';
+    timer.style.fontStyle = isItalic ? 'italic' : 'normal';
+}
 
 // @bycapwan
