@@ -1,23 +1,24 @@
-// const canvas = document.getElementById('timer-canvas');
-// const ctx = canvas.getContext('2d');
-
-// variables for DOM elements
-// timer display
+// Variables for DOM elements
+// Timer display
 const timer = document.getElementById('timer');
 const startButton = document.getElementById('start');
 const stopButton = document.getElementById('stop');
 const resetButton = document.getElementById('reset');
 
-// controls
+// Controls
 const delayInput = document.getElementById('delay');
 const stopInputHours = document.getElementById('stopTimerHours');
 const stopInputMinutes = document.getElementById('stopTimerMinutes');
 const stopInputSeconds = document.getElementById('stopTimerSeconds');
 const speedInput = document.getElementById('speedmult');
 const formatSelector = document.getElementById('timeformat');
-const textColourInput = document.getElementById('textcolour');
-const bgColourInput = document.getElementById('bgcolour');
+const textColorInput = document.getElementById('textcolour');
+const bgColorInput = document.getElementById('bgcolour');
 const timerFontInput = document.getElementById('font-picker');
+const boldToggle = document.getElementById('bold-toggle');
+const italicToggle = document.getElementById('italic-toggle');
+
+const computed = getComputedStyle(timer);
 
 const digitKeys = [
     'hour1',
@@ -37,12 +38,91 @@ const separatorKeys = [
     'secDecimalSep'
 ];
 
-const timerDisplayKeys = [...digitKeys, ...separatorKeys];
+const timerDisplayKeys = [
+    'hour1',
+    'hour2',
+    'hmSep',
+    'min1',
+    'min2',
+    'msSep',
+    'sec1',
+    'sec2',
+    'secDecimalSep',
+    'ds',
+    'cs',
+    'ms'
+];
 
 const domTimerElements = {}
 timerDisplayKeys.forEach(key => {
     domTimerElements[key] = document.getElementById(key);
 })
+
+// Functions for updating DOM timer
+function updateDomTimerDigits(digitsMap) {
+    Object.entries(digitsMap).forEach(([key, value]) => {
+        domTimerElements[key].textContent = value;
+    });
+}
+
+function updateDomTimerVisibility(visibilityMap) {
+    Object.entries(domTimerElements).forEach(([key, value]) => {
+        value.style.visibility = visibilityMap[key] ? 'visible' : 'hidden';
+    });
+}
+
+// On-screen canvas timer
+const onScreenCanvas = document.getElementById('onscreen-timer-canvas');
+const onScreenCtx = onScreenCanvas.getContext('2d');
+
+// Timer display settings
+const displaySettings = {
+    width: onScreenCanvas.width,
+    height: onScreenCanvas.height,
+    textColor: textColorInput.value,
+    bgColor: bgColorInput.value,
+    font: timerFontInput.value,
+    fontSize: 120,      // fixed for now
+    isBold: false,
+    isItalic: true
+}
+
+// Function to update a canvas timer
+function drawCanvasTimer(ctx, digits, visibility, settings) {
+    // console.log('Settings passed to drawCanvasTimer:');
+    // console.log(settings);
+
+    ctx.fillStyle = settings.bgColor;
+    ctx.fillRect(0, 0, settings.width, settings.height);
+
+    const style = `${settings.isItalic ? "italic " : ""}${settings.isBold ? "bold " : ""}`;
+    ctx.font = `${style}${settings.fontSize}px "${settings.font}", monospace`;
+    // console.log(ctx.font);
+
+    ctx.fillStyle = settings.textColor;
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+
+    const digitWidth = ctx.measureText("0").width;
+    const sepWidth = ctx.measureText(":").width;
+
+    const totalWidth = digitWidth * digitKeys.length + sepWidth * separatorKeys.length;
+    let x = (settings.width - totalWidth) / 2;
+    const y = settings.height / 2;
+
+    for (const key of timerDisplayKeys) {
+        const char = digits[key];
+        const charClassWidth = separatorKeys.includes(key) ? sepWidth : digitWidth;
+        if (visibility[key]) {
+            const charWidth = ctx.measureText(char).width;
+            const offset = (charClassWidth - charWidth) / 2;
+
+            ctx.fillText(char, x + offset, y);
+        }
+
+        x += charClassWidth;
+    }
+}
 
 // Logical 'timer' class that be used for both DOM elements (for on-screen timer) and canvas (for rendered video)
 // This does NOT encapsulate the full functionality of a timer (as this differs between instances)
@@ -66,17 +146,7 @@ class TimerBase {
     };
 
     constructor() {
-        // this.delayTimerInterval;
-        // this.timerInterval;
-
-        // this.startDelayTime = 0;
-        // this.elapsedDelayTime = 0;  // necessary here?
-        // this.startTime = 0;
         this.elapsedTime = 0;
-
-        // this.delayTime;
-        // this.stopTime;
-
         this.visibility = {...TimerBase.defaultVisibility};
 
         // after this many milliseconds, more digits will be needed to show full time
@@ -114,7 +184,12 @@ class TimerBase {
             sec2: seconds % 10,
             ds: Math.floor(ms / 100),
             cs: Math.floor((ms % 100) / 10),
-            ms: ms % 10
+            ms: ms % 10,
+
+            // also return separators for convenience when rendering canvas
+            hmSep: ":",
+            msSep: ":",
+            secDecimalSep: "."
         };
     }
 
@@ -187,6 +262,11 @@ class TimerBase {
 // Interactive on-screen timer controlled with buttons
 const interactiveTimerBase = new TimerBase;
 
+// Redraw the on-screen canvas timer
+function redrawOnScreenCanvasTimer() {
+    drawCanvasTimer(onScreenCtx, interactiveTimerBase.getDigits(), interactiveTimerBase.visibility, displaySettings);
+}
+
 // Logical variables for interactive timer
 let timerInterval;
 let startTime = 0;
@@ -203,6 +283,7 @@ function updateTimeFormat(){
 
     interactiveTimerBase.updateVisibility();
     updateDomTimerVisibility(interactiveTimerBase.visibility);
+    redrawOnScreenCanvasTimer();
 
     renderingTimerBase.updateVisibility();
 }
@@ -244,17 +325,10 @@ updateDelay();     // set initial delay time from input value
 //     }, 10);
 // }
 
-function updateDomTimerDigits(digitsMap) {
-    Object.entries(digitsMap).forEach(([key, value]) => {
-        domTimerElements[key].textContent = value;
-    });
-}
-
-function updateDomTimerVisibility(visibilityMap) {
-    Object.entries(domTimerElements).forEach(([key, value]) => {
-        value.style.visibility = visibilityMap[key] ? 'visible' : 'hidden';
-    });
-}
+// Completely refresh onscreen canvas - necessary? suggested by chatgpt
+// function redrawOnScreenCanvas() {
+//     drawTimer(onScreenCtx, interactiveTimerBase.getDigits(), interactiveTimerBase.visibility, displaySettings);
+// }
 
 // Functions for controlling interactive timer
 function updateTimer(elapsedTime) {
@@ -269,8 +343,16 @@ function updateTimer(elapsedTime) {
     }
 
     // Update canvas display
-    // ???
+    // console.log('Updating canvas timer, called from updateTimer.');
+    // console.log('Current display settings:');
+    // console.log(displaySettings);
+    redrawOnScreenCanvasTimer();
+    // drawCanvasTimer(onScreenCtx, digits, visibility, displaySettings);
 }
+
+// Draw initial canvas timer
+// console.log('Calling updateTimer(0) to initialise timer');
+// updateTimer(0);
 
 function startTimer(){
     startTime = Date.now() - elapsedTime;
@@ -299,6 +381,7 @@ function resetTimer(){
     clearInterval(timerInterval);
 
     elapsedTime = 0;
+    // console.log('Calling updateTimer(0) to reset timer');
     updateTimer(0);
 
     startButton.disabled = false;
@@ -314,18 +397,26 @@ stopInputMinutes.addEventListener('change', updateStopTime);
 stopInputSeconds.addEventListener('change', updateStopTime);
 speedInput.addEventListener('change', updateSpeed);
 formatSelector.addEventListener('change', updateTimeFormat);
-textColourInput.addEventListener('input', () => {
-    timer.style.color = textColourInput.value;
-});
-bgColourInput.addEventListener('input', () => {
-    timer.style.backgroundColor = bgColourInput.value;
-});
-timerFontInput.addEventListener('input', () => {
-    timer.style.fontFamily = `"${timerFontInput.value}"`;
-});
 
 // If the time format selector is changed to a TomSelect dropdown, the updateTimeFormat function will need to be updated to get the selected index/value from TomSelect instead of a regular select element. The event listener for the format selector will also need to be updated to listen for the 'change' event from TomSelect.
 // new TomSelect('#timeformat', {});
+
+textColorInput.addEventListener('input', () => {
+    timer.style.color = displaySettings.textColor = textColorInput.value;
+    redrawOnScreenCanvasTimer();
+});
+bgColorInput.addEventListener('input', () => {
+    timer.style.backgroundColor = displaySettings.bgColor = bgColorInput.value;
+    redrawOnScreenCanvasTimer();
+});
+timerFontInput.addEventListener('input', async () => {
+    const font = timerFontInput.value;
+    displaySettings.font = font;
+    timer.style.fontFamily = `"${font}"`;
+    await document.fonts.load(`100px "${font}"`);
+    // console.log('Chosen font loaded. Refreshing canvas timer.');
+    redrawOnScreenCanvasTimer();     // redraw onscreen timer when fonts loaded
+});
 
 new TomSelect('#font-picker', {
     render: {
@@ -348,25 +439,29 @@ new TomSelect('#font-picker', {
 });
 
 // Font style toggles (bold/italic)
-const boldToggle = document.getElementById('bold-toggle');
-const italicToggle = document.getElementById('italic-toggle');
-
-let isBold = false;
-let isItalic = true;     // timer starts in italic by default
 
 boldToggle.addEventListener('click', () => {
-    isBold = !isBold;
+    displaySettings.isBold = !displaySettings.isBold;
     boldToggle.classList.toggle('active');
     updateFontStyle();
 });
 
 italicToggle.addEventListener('click', () => {
-    isItalic = !isItalic;
+    displaySettings.isItalic = !displaySettings.isItalic;
     italicToggle.classList.toggle('active');
     updateFontStyle();
 });
 
 function updateFontStyle() {
-    timer.style.fontWeight = isBold ? 'bold' : 'normal';
-    timer.style.fontStyle = isItalic ? 'italic' : 'normal';
+    timer.style.fontWeight = displaySettings.isBold ? 'bold' : 'normal';
+    timer.style.fontStyle = displaySettings.isItalic ? 'italic' : 'normal';
+    redrawOnScreenCanvasTimer();
 }
+
+// Refresh canvas when all fonts loaded
+document.fonts.addEventListener("loadingdone", () => {
+    // console.log('All font loaded. Refreshing canvas timer.');
+    // console.log('Current display settings:');
+    // console.log(displaySettings);
+    redrawOnScreenCanvasTimer();
+});
