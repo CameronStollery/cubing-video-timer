@@ -1,66 +1,296 @@
+// Variables for DOM elements
+// Timer display
 const timer = document.getElementById('timer');
 const startButton = document.getElementById('start');
 const stopButton = document.getElementById('stop');
 const resetButton = document.getElementById('reset');
 
-// controls
+// Controls
 const delayInput = document.getElementById('delay');
 const stopInputHours = document.getElementById('stopTimerHours');
 const stopInputMinutes = document.getElementById('stopTimerMinutes');
 const stopInputSeconds = document.getElementById('stopTimerSeconds');
 const speedInput = document.getElementById('speedmult');
 const formatSelector = document.getElementById('timeformat');
-const textColourInput = document.getElementById('textcolour');
-const bgColourInput = document.getElementById('bgcolour');
+const textColorInput = document.getElementById('textcolour');
+const bgColorInput = document.getElementById('bgcolour');
 const timerFontInput = document.getElementById('font-picker');
+const boldToggle = document.getElementById('bold-toggle');
+const italicToggle = document.getElementById('italic-toggle');
 
-// timer digits/separators
-const hour1 = document.getElementById('hour1');
-const hour2 = document.getElementById('hour2');
-const hmSep = document.getElementById('hmSep');
-const min1 = document.getElementById('min1');
-const min2 = document.getElementById('min2');
-const msSep = document.getElementById('msSep');
-const sec1 = document.getElementById('sec1');
-const sec2 = document.getElementById('sec2');
-const secDecimalSep = document.getElementById('secDecimalSep');
-const ds = document.getElementById('ds');
-const cs = document.getElementById('cs');
-const ms = document.getElementById('ms');
+const computed = getComputedStyle(timer);
 
-let delayTimerInterval;
+const digitKeys = [
+    'hour1',
+    'hour2',
+    'min1',
+    'min2',
+    'sec1',
+    'sec2',
+    'ds',
+    'cs',
+    'ms'
+];
+
+const separatorKeys = [
+    'hmSep',
+    'msSep',
+    'secDecimalSep'
+];
+
+const timerDisplayKeys = [
+    'hour1',
+    'hour2',
+    'hmSep',
+    'min1',
+    'min2',
+    'msSep',
+    'sec1',
+    'sec2',
+    'secDecimalSep',
+    'ds',
+    'cs',
+    'ms'
+];
+
+const domTimerElements = {}
+timerDisplayKeys.forEach(key => {
+    domTimerElements[key] = document.getElementById(key);
+})
+
+// Functions for updating DOM timer
+function updateDomTimerDigits(digitsMap) {
+    Object.entries(digitsMap).forEach(([key, value]) => {
+        domTimerElements[key].textContent = value;
+    });
+}
+
+function updateDomTimerVisibility(visibilityMap) {
+    Object.entries(domTimerElements).forEach(([key, value]) => {
+        value.style.visibility = visibilityMap[key] ? 'visible' : 'hidden';
+    });
+}
+
+// On-screen canvas timer
+const onScreenCanvas = document.getElementById('onscreen-timer-canvas');
+const onScreenCtx = onScreenCanvas.getContext('2d');
+
+// Timer display settings
+const displaySettings = {
+    width: onScreenCanvas.width,
+    height: onScreenCanvas.height,
+    textColor: textColorInput.value,
+    bgColor: bgColorInput.value,
+    font: timerFontInput.value,
+    fontSize: 120,      // fixed for now
+    isBold: false,
+    isItalic: true
+}
+
+// Function to update a canvas timer
+function drawCanvasTimer(ctx, digits, visibility, settings) {
+    // console.log('Settings passed to drawCanvasTimer:');
+    // console.log(settings);
+
+    ctx.fillStyle = settings.bgColor;
+    ctx.fillRect(0, 0, settings.width, settings.height);
+
+    const style = `${settings.isItalic ? "italic " : ""}${settings.isBold ? "bold " : ""}`;
+    ctx.font = `${style}${settings.fontSize}px "${settings.font}", monospace`;
+    // console.log(ctx.font);
+
+    ctx.fillStyle = settings.textColor;
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+
+    const digitWidth = ctx.measureText("0").width;
+    const colonWidth = ctx.measureText(":").width;
+    const dotWidth = ctx.measureText(".").width;
+
+    const totalWidth = digitWidth * digitKeys.length + colonWidth * 2 + dotWidth;
+    let x = (settings.width - totalWidth) / 2;
+    const y = settings.height / 2;
+
+    for (const key of timerDisplayKeys) {
+        const char = digits[key];
+        const charClassWidth = separatorKeys.includes(key) ? (char == ':' ? colonWidth : dotWidth) : digitWidth;
+        if (visibility[key]) {
+            const charWidth = ctx.measureText(char).width;
+            const offset = (charClassWidth - charWidth) / 2;
+
+            ctx.fillText(char, x + offset, y);
+        }
+
+        x += charClassWidth;
+    }
+}
+
+// Logical 'timer' class that be used for both DOM elements (for on-screen timer) and canvas (for rendered video)
+// This does NOT encapsulate the full functionality of a timer (as this differs between instances)
+// Instead, it stores variables about the timer state and allows retrieving the current timer digits and visibility
+// The elapsedTime (and similar) variable(s) are updated from outside via a class method
+// The global formatString variable is used to update the visibility map when needed - changing it will trigger the visibility to update
+class TimerBase {
+    static defaultVisibility = {
+        hour1: false,
+        hour2: false,
+        hmSep: false,
+        min1: false,
+        min2: false,
+        msSep: false,
+        sec1: false,
+        sec2: true,     // one digit of seconds is always shown in all formats
+        secDecimalSep: false,
+        ds: false,
+        cs: false,
+        ms: false
+    };
+
+    constructor() {
+        this.elapsedTime = 0;
+        this.visibility = {...TimerBase.defaultVisibility};
+
+        // after this many milliseconds, more digits will be needed to show full time
+        this.updateVisibilityThreshold = 10 * 1000;
+
+        // flag if visibility has changed to avoid updating every DOM element's visibility repeatedly
+        this.visibilityChanged = false;
+    }
+
+    updateElapsedTime(time) {
+        this.visibilityChanged = false;
+        this.elapsedTime = time;
+        if (this.elapsedTime > this.updateVisibilityThreshold) {
+            this.updateVisibility();
+        }
+        if (time == 0) {    // resetting timer
+            this.updateVisibilityThreshold = 10 * 1000;
+            this.updateVisibility();
+        }
+    }
+
+    // digits aren't stored as instance variable because they are updated every time they are accessed
+    getDigits() {
+        const hours = Math.floor(this.elapsedTime / (1000 * 60 * 60));
+        const minutes = Math.floor((this.elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((this.elapsedTime % (1000 * 60)) / 1000);
+        const ms = Math.floor(this.elapsedTime % 1000);
+
+        return {
+            hour1: Math.floor(hours / 10),
+            hour2: hours % 10,
+            min1: Math.floor(minutes / 10),
+            min2: minutes % 10,
+            sec1: Math.floor(seconds / 10),
+            sec2: seconds % 10,
+            ds: Math.floor(ms / 100),
+            cs: Math.floor((ms % 100) / 10),
+            ms: ms % 10,
+
+            // also return separators for convenience when rendering canvas
+            hmSep: ":",
+            msSep: ":",
+            secDecimalSep: "."
+        };
+    }
+
+    updateVisibility() {
+        // reset to default
+        this.visibility = {...TimerBase.defaultVisibility};
+
+        if (formatString.includes("HH")) {
+            this.visibility.hour1 = true;
+        }
+
+        if (formatString.includes("H")) {
+            this.visibility.hour2 = true;
+            this.visibility.hmSep = true;
+        }
+        
+        if (formatString.includes("MM")) {
+            this.visibility.min1 = true;
+        }
+
+        if (formatString.includes("M")) {
+            this.visibility.min2 = true;
+            this.visibility.msSep = true;
+        }
+
+        if (formatString.includes("SS")) {
+            this.visibility.sec1 = true;
+        }
+
+        if (formatString.includes("X")) {
+            this.visibility.secDecimalSep = true;
+            this.visibility.ds = true;
+        }
+
+        if (formatString.includes("XX")) {
+            this.visibility.cs = true;
+        }
+
+        if (formatString.includes("XXX")) {
+            this.visibility.ms = true;
+        }
+
+        // show more digits if needed to show full time, regardless of format
+        if (this.elapsedTime >= 10 * 1000) {
+            this.visibility.sec1 = true;
+            this.updateVisibilityThreshold = 60 * 1000
+            if (this.elapsedTime >= 60 * 1000) {
+                this.visibility.msSep = true;
+                this.visibility.min2 = true;
+                this.updateVisibilityThreshold = 10 * 60 * 1000
+                if (this.elapsedTime >= 10 * 60 * 1000) {
+                    this.visibility.min1 = true;
+                    this.updateVisibilityThreshold = 60 * 60 * 1000
+                    if (this.elapsedTime >= 60 * 60 * 1000) {
+                        this.visibility.hmSep = true;
+                        this.visibility.hour2 = true;
+                        this.updateVisibilityThreshold = 10 * 60 * 60 * 1000
+                        if (this.elapsedTime >= 10 * 60 * 60 * 1000) {
+                            this.visibility.hour1 = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        this.visibilityChanged = true;
+    }
+};
+
+// Interactive on-screen timer controlled with buttons
+const interactiveTimerBase = new TimerBase;
+
+// Redraw the on-screen canvas timer
+function redrawOnScreenCanvasTimer() {
+    drawCanvasTimer(onScreenCtx, interactiveTimerBase.getDigits(), interactiveTimerBase.visibility, displaySettings);
+}
+
+// Logical variables for interactive timer
 let timerInterval;
-
-let hours = 0;
-let minutes = 0;
-let seconds = 0;
-let mseconds = 0;
-
-let startDelayTime = 0;
-let elapsedDelayTime = 0;
 let startTime = 0;
 let elapsedTime = 0;
 
-// milliseconds at which more timer digits will need to be shown, given current format chosen
-let increaseDigitThreshold = 60 * 1000;
+// Invisible timer used to render video
+const renderingTimerBase = new TimerBase;
 
-let format;
+// Variables for controls and methods to update them 
+let formatString;
+// update the global time format the applies to all timers (DOM or canvas)
+function updateTimeFormat(){
+    formatString = formatSelector.value;
+
+    interactiveTimerBase.updateVisibility();
+    updateDomTimerVisibility(interactiveTimerBase.visibility);
+    redrawOnScreenCanvasTimer();
+
+    renderingTimerBase.updateVisibility();
+}
 updateTimeFormat();     // set initial format from selector value
 
-let delayTime;
-updateDelay();     // set initial delay time from input value
-
 let stopTime;
-updateStopTime();     // set initial stop time from input values
-
-let speedMultiplier;
-updateSpeed();     // set initial speed multiplier from input value
-
-function updateDelay(){
-    resetTimer();
-    delayTime = delayInput.value * 1000;
-}
-
 function updateStopTime(){
     resetTimer();
     stopTime = 
@@ -68,453 +298,76 @@ function updateStopTime(){
         stopInputMinutes.value * 60 * 1000 +
         stopInputSeconds.value * 1000;
 }
+updateStopTime();     // set initial stop time from input values
 
+let speedMultiplier;
 function updateSpeed(){
     resetTimer();
     speedMultiplier = speedInput.value;
 }
+updateSpeed();     // set initial speed multiplier from input value
 
-function updateTimeFormat(){
-    format = formatSelector.selectedIndex;
+let delayTime;
+function updateDelay(){
+    resetTimer();
+    delayTime = delayInput.value * 1000;
+}
+updateDelay();     // set initial delay time from input value
 
-    switch (format) {
-        case 0:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "hidden";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "hidden";
-            ds.style.visibility = "hidden";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
+// function startDelay(){
+//     startDelayTime = Date.now();
 
-            increaseDigitThreshold = 10 * 1000;
-            break;
-        
-        case 1:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "hidden";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
+//     delayTimerInterval = setInterval( ()=> {
+//         elapsedDelayTime = Date.now() - startDelayTime;
+//         if (elapsedDelayTime > delayTime) {
+//             clearInterval(delayTimerInterval);
+//             startTimer();
+//         }
+//     }, 10);
+// }
 
-            increaseDigitThreshold = 10 * 1000;
-            break;
-        
-        case 2:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "hidden";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "hidden";
+// Completely refresh onscreen canvas - necessary? suggested by chatgpt
+// function redrawOnScreenCanvas() {
+//     drawTimer(onScreenCtx, interactiveTimerBase.getDigits(), interactiveTimerBase.visibility, displaySettings);
+// }
 
-            increaseDigitThreshold = 10 * 1000;
-            break;
-        
-        case 3:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "hidden";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "visible";
+// Functions for controlling interactive timer
+function updateTimer(elapsedTime) {
+    interactiveTimerBase.updateElapsedTime(elapsedTime)
+    const digits = interactiveTimerBase.getDigits();
+    const visibility = interactiveTimerBase.visibility
 
-            increaseDigitThreshold = 10 * 1000;
-            break;
-        
-        case 4:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "hidden";
-            ds.style.visibility = "hidden";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 60 * 1000;
-            break;
-        
-        case 5:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 60 * 1000;
-            break;
-        
-        case 6:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 60 * 1000;
-            break;
-        
-        case 7:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "hidden";
-            msSep.style.visibility = "hidden";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "visible";
-
-            increaseDigitThreshold = 60 * 1000;
-            break;
-
-        case 8:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "hidden";
-            ds.style.visibility = "hidden";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 10 * 60 * 1000;
-            break;
-        
-        case 9:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 10 * 60 * 1000;
-            break;
-        
-        case 10:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 10 * 60 * 1000;
-            break;
-        
-        case 11:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "hidden";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "visible";
-
-            increaseDigitThreshold = 10 * 60 * 1000;
-            break;
-
-        case 12:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "hidden";
-            ds.style.visibility = "hidden";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 60 * 60 * 1000;
-            break;
-        
-        case 13:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 60 * 60 * 1000;
-            break;
-        
-        case 14:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 60 * 60 * 1000;
-            break;
-        
-        case 15:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "hidden";
-            hmSep.style.visibility = "hidden";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "visible";
-
-            increaseDigitThreshold = 60 * 60 * 1000;
-            break;
-
-        case 16:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "hidden";
-            ds.style.visibility = "hidden";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 10 * 60 * 60 * 1000;
-            break;
-        
-        case 17:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 10 * 60 * 60 * 1000;
-            break;
-        
-        case 18:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = 10 * 60 * 60 * 1000;
-            break;
-        
-        case 19:
-            hour1.style.visibility = "hidden";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "visible";
-
-            increaseDigitThreshold = 10 * 60 * 60 * 1000;
-            break;
-
-        case 20:
-            hour1.style.visibility = "visible";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "hidden";
-            ds.style.visibility = "hidden";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = Infinity;
-            break;
-        
-        case 21:
-            hour1.style.visibility = "visible";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "hidden";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = Infinity;
-            break;
-        
-        case 22:
-            hour1.style.visibility = "visible";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "hidden";
-
-            increaseDigitThreshold = Infinity;
-            break;
-        
-        case 23:
-            hour1.style.visibility = "visible";
-            hour2.style.visibility = "visible";
-            hmSep.style.visibility = "visible";
-            min1.style.visibility = "visible";
-            min2.style.visibility = "visible";
-            msSep.style.visibility = "visible";
-            sec1.style.visibility = "visible";
-            sec2.style.visibility = "visible";
-            secDecimalSep.style.visibility = "visible";
-            ds.style.visibility = "visible";
-            cs.style.visibility = "visible";
-            ms.style.visibility = "visible";
-
-            increaseDigitThreshold = Infinity;
-            break;
+    // Update DOM display
+    updateDomTimerDigits(digits);
+    if (interactiveTimerBase.visibilityChanged) {
+        updateDomTimerVisibility(visibility);
     }
+
+    // Update canvas display
+    // console.log('Updating canvas timer, called from updateTimer.');
+    // console.log('Current display settings:');
+    // console.log(displaySettings);
+    redrawOnScreenCanvasTimer();
+    // drawCanvasTimer(onScreenCtx, digits, visibility, displaySettings);
 }
 
-function startDelay(){
-    startDelayTime = Date.now();
-
-    delayTimerInterval = setInterval( ()=> {
-        elapsedDelayTime = Date.now() - startDelayTime;
-        if (elapsedDelayTime > delayTime) {
-            clearInterval(delayTimerInterval);
-            startTimer();
-        }
-    }, 10);
-
-}
+// Draw initial canvas timer
+// console.log('Calling updateTimer(0) to initialise timer');
+// updateTimer(0);
 
 function startTimer(){
     startTime = Date.now() - elapsedTime;
-
+    
     timerInterval = setInterval( ()=> {
         elapsedTime = (Date.now() - startTime) * speedMultiplier; 
         if (elapsedTime >= stopTime) {
             stopTimer();
             updateTimer(stopTime);
-            startButton.disabled = true;
         } else {
             updateTimer(elapsedTime);
         }
     }, 1);
-
+    
     startButton.disabled = true;
     stopButton.disabled = false;
 }
@@ -529,74 +382,14 @@ function resetTimer(){
     clearInterval(timerInterval);
 
     elapsedTime = 0;
-
-    hour1.textContent = "0";
-    hour2.textContent = "0";
-    min1.textContent = "0";
-    min2.textContent = "0";
-    sec1.textContent = "0";
-    sec2.textContent = "0";
-    ds.textContent = "0";
-    cs.textContent = "0";
-    ms.textContent = "0";
+    // console.log('Calling updateTimer(0) to reset timer');
+    updateTimer(0);
 
     startButton.disabled = false;
     stopButton.disabled = false;
-
-    updateTimeFormat();     // reset format in the case that extra digits have appeared as time increases
 }
 
-function updateTimer(elapsedTime){
-    hours = Math.floor(elapsedTime / (1000 * 60 * 60));
-    minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
-    seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
-    mseconds = Math.floor((elapsedTime % 1000));
-
-    // update values of each digit
-    hour1.textContent = Math.floor(hours / 10);
-    hour2.textContent = hours % 10;
-    min1.textContent = Math.floor(minutes / 10);
-    min2.textContent = minutes % 10;
-    sec1.textContent = Math.floor(seconds / 10);
-    sec2.textContent = seconds % 10;
-    ds.textContent = Math.floor(mseconds / 100);
-    cs.textContent = Math.floor((mseconds % 100) / 10);
-    ms.textContent = mseconds % 10;
-
-    // display extra digits/separators if certain thresholds passed
-    if (elapsedTime >= increaseDigitThreshold) {
-        switch (increaseDigitThreshold) {
-            case 10 * 1000:
-                increaseDigitThreshold = 60 * 1000;
-                sec1.style.visibility = "visible";
-                break;
-
-            case 60 * 1000:
-                increaseDigitThreshold = 10 * 60 * 1000;
-                msSep.style.visibility = "visible";
-                min2.style.visibility = "visible";
-                break;
-            
-            case 10 * 60 * 1000:
-                increaseDigitThreshold = 60 * 60 * 1000;
-                min1.style.visibility = "visible";
-                break;
-
-            case 60 * 60 * 1000:
-                increaseDigitThreshold = 10 * 60 * 60 * 1000;
-                hmSep.style.visibility = "visible";
-                hour2.style.visibility = "visible";
-                break;
-            
-            case 10 * 60 * 60 * 1000:
-                increaseDigitThreshold = Infinity;
-                hour1.style.visibility = "visible";
-                break;
-        }
-    }
-}
-
-startButton.addEventListener('click', startDelay);
+startButton.addEventListener('click', startTimer);
 stopButton.addEventListener('click', stopTimer);
 resetButton.addEventListener('click', resetTimer);
 delayInput.addEventListener('change', updateDelay);
@@ -605,18 +398,26 @@ stopInputMinutes.addEventListener('change', updateStopTime);
 stopInputSeconds.addEventListener('change', updateStopTime);
 speedInput.addEventListener('change', updateSpeed);
 formatSelector.addEventListener('change', updateTimeFormat);
-textColourInput.addEventListener('input', () => {
-    timer.style.color = textColourInput.value;
-});
-bgColourInput.addEventListener('input', () => {
-    timer.style.backgroundColor = bgColourInput.value;
-});
-timerFontInput.addEventListener('input', () => {
-    timer.style.fontFamily = `"${timerFontInput.value}"`;
-});
 
 // If the time format selector is changed to a TomSelect dropdown, the updateTimeFormat function will need to be updated to get the selected index/value from TomSelect instead of a regular select element. The event listener for the format selector will also need to be updated to listen for the 'change' event from TomSelect.
 // new TomSelect('#timeformat', {});
+
+textColorInput.addEventListener('input', () => {
+    timer.style.color = displaySettings.textColor = textColorInput.value;
+    redrawOnScreenCanvasTimer();
+});
+bgColorInput.addEventListener('input', () => {
+    timer.style.backgroundColor = displaySettings.bgColor = bgColorInput.value;
+    redrawOnScreenCanvasTimer();
+});
+timerFontInput.addEventListener('input', async () => {
+    const font = timerFontInput.value;
+    displaySettings.font = font;
+    timer.style.fontFamily = `"${font}"`;
+    await document.fonts.load(`100px "${font}"`);
+    // console.log('Chosen font loaded. Refreshing canvas timer.');
+    redrawOnScreenCanvasTimer();     // redraw onscreen timer when fonts loaded
+});
 
 new TomSelect('#font-picker', {
     render: {
@@ -639,27 +440,29 @@ new TomSelect('#font-picker', {
 });
 
 // Font style toggles (bold/italic)
-const boldToggle = document.getElementById('bold-toggle');
-const italicToggle = document.getElementById('italic-toggle');
-
-let isBold = false;
-let isItalic = true;     // timer starts in italic by default
 
 boldToggle.addEventListener('click', () => {
-    isBold = !isBold;
+    displaySettings.isBold = !displaySettings.isBold;
     boldToggle.classList.toggle('active');
     updateFontStyle();
 });
 
 italicToggle.addEventListener('click', () => {
-    isItalic = !isItalic;
+    displaySettings.isItalic = !displaySettings.isItalic;
     italicToggle.classList.toggle('active');
     updateFontStyle();
 });
 
 function updateFontStyle() {
-    timer.style.fontWeight = isBold ? 'bold' : 'normal';
-    timer.style.fontStyle = isItalic ? 'italic' : 'normal';
+    timer.style.fontWeight = displaySettings.isBold ? 'bold' : 'normal';
+    timer.style.fontStyle = displaySettings.isItalic ? 'italic' : 'normal';
+    redrawOnScreenCanvasTimer();
 }
 
-// @bycapwan
+// Refresh canvas when all fonts loaded
+document.fonts.addEventListener("loadingdone", () => {
+    // console.log('All font loaded. Refreshing canvas timer.');
+    // console.log('Current display settings:');
+    // console.log(displaySettings);
+    redrawOnScreenCanvasTimer();
+});
