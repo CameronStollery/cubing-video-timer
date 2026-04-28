@@ -89,15 +89,11 @@ const displaySettings = {
 
 // Function to update a canvas timer
 function drawCanvasTimer(ctx, digits, visibility, settings) {
-    // console.log('Settings passed to drawCanvasTimer:');
-    // console.log(settings);
-
     ctx.fillStyle = settings.bgColor;
     ctx.fillRect(0, 0, settings.width, settings.height);
 
     const style = `${settings.isItalic ? "italic " : ""}${settings.isBold ? "bold " : ""}`;
     ctx.font = `${style}${settings.fontSize}px "${settings.font}", monospace`;
-    // console.log(ctx.font);
 
     ctx.fillStyle = settings.textColor;
     ctx.textBaseline = "middle";
@@ -344,16 +340,9 @@ function updateTimer(elapsedTime) {
     }
 
     // Update canvas display
-    // console.log('Updating canvas timer, called from updateTimer.');
-    // console.log('Current display settings:');
-    // console.log(displaySettings);
     redrawOnScreenCanvasTimer();
     // drawCanvasTimer(onScreenCtx, digits, visibility, displaySettings);
 }
-
-// Draw initial canvas timer
-// console.log('Calling updateTimer(0) to initialise timer');
-// updateTimer(0);
 
 function startTimer(){
     startTime = Date.now() - elapsedTime;
@@ -382,7 +371,6 @@ function resetTimer(){
     clearInterval(timerInterval);
 
     elapsedTime = 0;
-    // console.log('Calling updateTimer(0) to reset timer');
     updateTimer(0);
 
     startButton.disabled = false;
@@ -415,7 +403,6 @@ timerFontInput.addEventListener('input', async () => {
     displaySettings.font = font;
     timer.style.fontFamily = `"${font}"`;
     await document.fonts.load(`100px "${font}"`);
-    // console.log('Chosen font loaded. Refreshing canvas timer.');
     redrawOnScreenCanvasTimer();     // redraw onscreen timer when fonts loaded
 });
 
@@ -461,8 +448,5 @@ function updateFontStyle() {
 
 // Refresh canvas when all fonts loaded
 document.fonts.addEventListener("loadingdone", () => {
-    // console.log('All font loaded. Refreshing canvas timer.');
-    // console.log('Current display settings:');
-    // console.log(displaySettings);
     redrawOnScreenCanvasTimer();
 });
