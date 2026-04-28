@@ -1,6 +1,5 @@
 // Variables for DOM elements
-// Timer display
-const timer = document.getElementById('timer');
+// Timer buttons
 const startButton = document.getElementById('start');
 const stopButton = document.getElementById('stop');
 const resetButton = document.getElementById('reset');
@@ -17,8 +16,6 @@ const bgColorInput = document.getElementById('bgcolour');
 const timerFontInput = document.getElementById('font-picker');
 const boldToggle = document.getElementById('bold-toggle');
 const italicToggle = document.getElementById('italic-toggle');
-
-const computed = getComputedStyle(timer);
 
 const digitKeys = [
     'hour1',
@@ -52,24 +49,6 @@ const timerDisplayKeys = [
     'cs',
     'ms'
 ];
-
-const domTimerElements = {}
-timerDisplayKeys.forEach(key => {
-    domTimerElements[key] = document.getElementById(key);
-})
-
-// Functions for updating DOM timer
-function updateDomTimerDigits(digitsMap) {
-    Object.entries(digitsMap).forEach(([key, value]) => {
-        domTimerElements[key].textContent = value;
-    });
-}
-
-function updateDomTimerVisibility(visibilityMap) {
-    Object.entries(domTimerElements).forEach(([key, value]) => {
-        value.style.visibility = visibilityMap[key] ? 'visible' : 'hidden';
-    });
-}
 
 // On-screen canvas timer
 const onScreenCanvas = document.getElementById('onscreen-timer-canvas');
@@ -279,7 +258,6 @@ function updateTimeFormat(){
     formatString = formatSelector.value;
 
     interactiveTimerBase.updateVisibility();
-    updateDomTimerVisibility(interactiveTimerBase.visibility);
     redrawOnScreenCanvasTimer();
 
     renderingTimerBase.updateVisibility();
@@ -333,12 +311,6 @@ function updateTimer(elapsedTime) {
     const digits = interactiveTimerBase.getDigits();
     const visibility = interactiveTimerBase.visibility
 
-    // Update DOM display
-    updateDomTimerDigits(digits);
-    if (interactiveTimerBase.visibilityChanged) {
-        updateDomTimerVisibility(visibility);
-    }
-
     // Update canvas display
     redrawOnScreenCanvasTimer();
     // drawCanvasTimer(onScreenCtx, digits, visibility, displaySettings);
@@ -391,17 +363,16 @@ formatSelector.addEventListener('change', updateTimeFormat);
 // new TomSelect('#timeformat', {});
 
 textColorInput.addEventListener('input', () => {
-    timer.style.color = displaySettings.textColor = textColorInput.value;
+    displaySettings.textColor = textColorInput.value;
     redrawOnScreenCanvasTimer();
 });
 bgColorInput.addEventListener('input', () => {
-    timer.style.backgroundColor = displaySettings.bgColor = bgColorInput.value;
+    displaySettings.bgColor = bgColorInput.value;
     redrawOnScreenCanvasTimer();
 });
 timerFontInput.addEventListener('input', async () => {
     const font = timerFontInput.value;
     displaySettings.font = font;
-    timer.style.fontFamily = `"${font}"`;
     await document.fonts.load(`100px "${font}"`);
     redrawOnScreenCanvasTimer();     // redraw onscreen timer when fonts loaded
 });
@@ -441,8 +412,6 @@ italicToggle.addEventListener('click', () => {
 });
 
 function updateFontStyle() {
-    timer.style.fontWeight = displaySettings.isBold ? 'bold' : 'normal';
-    timer.style.fontStyle = displaySettings.isItalic ? 'italic' : 'normal';
     redrawOnScreenCanvasTimer();
 }
 
