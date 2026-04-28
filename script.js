@@ -104,15 +104,16 @@ function drawCanvasTimer(ctx, digits, visibility, settings) {
     ctx.textAlign = "left";
 
     const digitWidth = ctx.measureText("0").width;
-    const sepWidth = ctx.measureText(":").width;
+    const colonWidth = ctx.measureText(":").width;
+    const dotWidth = ctx.measureText(".").width;
 
-    const totalWidth = digitWidth * digitKeys.length + sepWidth * separatorKeys.length;
+    const totalWidth = digitWidth * digitKeys.length + colonWidth * 2 + dotWidth;
     let x = (settings.width - totalWidth) / 2;
     const y = settings.height / 2;
 
     for (const key of timerDisplayKeys) {
         const char = digits[key];
-        const charClassWidth = separatorKeys.includes(key) ? sepWidth : digitWidth;
+        const charClassWidth = separatorKeys.includes(key) ? (char == ':' ? colonWidth : dotWidth) : digitWidth;
         if (visibility[key]) {
             const charWidth = ctx.measureText(char).width;
             const offset = (charClassWidth - charWidth) / 2;
