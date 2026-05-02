@@ -240,7 +240,7 @@ class TimerBase {
 };
 
 // Interactive on-screen timer controlled with buttons
-const interactiveTimerBase = new TimerBase;
+const interactiveTimerBase = new TimerBase();
 
 // Redraw the on-screen canvas timer
 function redrawOnScreenCanvasTimer() {
@@ -252,9 +252,6 @@ let timerInterval;
 let startTime = 0;
 let elapsedTime = 0;
 
-// Invisible timer used to render video
-const renderingTimerBase = new TimerBase;
-
 // Variables for controls and methods to update them 
 let formatString;
 // update the global time format the applies to all timers (DOM or canvas)
@@ -263,8 +260,6 @@ function updateTimeFormat(){
 
     interactiveTimerBase.updateVisibility();
     redrawOnScreenCanvasTimer();
-
-    renderingTimerBase.updateVisibility();
 }
 updateTimeFormat();     // set initial format from selector value
 
@@ -421,22 +416,22 @@ document.fonts.addEventListener("loadingdone", () => {
 });
 
 
-// // Video rendering code (initially copied straight from chatgpt)
-// const btn = document.getElementById("render");
+// Video rendering code (initially copied straight from chatgpt)
+// const renderButton = document.getElementById("render");
 
-// btn.onclick = () => {
+// renderButton.onclick = () => {
 //     const worker = new Worker("./worker.js", { type: "module" });
 
-//     // TODO fix this
+//     // draw function needs ctx, digits, visibility, settings
+//     // + need video settings
 //     worker.postMessage({
-//         width: 800,
-//         height: 300,
-//         fps: 30,
-//         duration: 10,
-//         playbackSpeed: 10,
-//         stopAt: 120,
-//         preDelay: 0,    // TODO configurable
-//         postDelay: 0
+//         displaySettings: displaySettings,
+//         timeFormat: formatString,
+//         fps: 30,    // TODO make configurable
+//         timerDuration: 10,
+//         preDelay: preDelayTime,
+//         postDelay: postDelayTime,
+//         speedMultiplier: speedMultiplier
 //     });
 
 //     worker.onmessage = (e) => {
