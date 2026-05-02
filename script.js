@@ -220,32 +220,53 @@ const renderButton = document.getElementById("render");
 renderButton.onclick = () => {
     console.log("Sending details of video to worker node for rendering.")
 
-    const worker = new Worker("./worker.js", { type: "module" });
+    try {
+        const worker = new Worker("./worker.js", { type: "module" });
+        console.log("Worker created successfully");
 
-    worker.postMessage({
-        displaySettings: displaySettings,
-        timeFormat: formatString,
-        fps: 60,    // TODO make configurable
-        speedMultiplier: speedMultiplier,
-        stopTime: stopTime / 1000,         // variables are in ms, convert to s for rendering
-        preDelayTime: preDelayTime / 1000,
-        postDelayTime: postDelayTime / 1000
-    });
+        worker.onerror = (error) => {
+            console.error("Worker error:", error);
+            console.error("Error details:", {
+                message: error.message,
+                filename: error.filename,
+                lineno: error.lineno,
+                colno: error.colno
+            });
+        };
 
-    worker.onmessage = (e) => {
-        if (e.data.type === 'debug') {
-            console.log("[Worker Debug]", e.data.message);
-        } else if (e.data.type === 'complete') {
-            console.log("Rendering complete. Video is ready to download.")
+        worker.onmessageerror = (error) => {
+            console.error("Worker message error:", error);
+        };
 
-            const blob = e.data.blob;
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "timer.webm";
-            a.click();
+        worker.postMessage({
+            displaySettings: displaySettings,
+            timeFormat: formatString,
+            fps: 60,    // TODO make configurable
+            speedMultiplier: speedMultiplier,
+            stopTime: stopTime / 1000,         // variables are in ms, convert to s for rendering
+            preDelayTime: preDelayTime / 1000,
+            postDelayTime: postDelayTime / 1000
+        });
 
-            worker.terminate();
-        }
-    };
+        console.log("Message posted to worker");
+
+        worker.onmessage = (e) => {
+            if (e.data.type === 'debug') {
+                console.log("[Worker Debug]", e.data.message);
+            } else if (e.data.type === 'complete') {
+                console.log("Rendering complete. Video is ready to download.")
+
+                const blob = e.data.blob;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "timer.webm";
+                a.click();
+
+                worker.terminate();
+            }
+        };
+    } catch (error) {
+        console.error("Error creating worker:", error);
+    }
 };

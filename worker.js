@@ -1,5 +1,9 @@
-import { WebMMuxer } from "https://cdn.jsdelivr.net/npm/webm-muxer@5/+esm";
+// Worker script starting
+console.log("Worker script starting to load");
+
 import { TimerBase, drawCanvasTimer } from "./shared-timer-utils.js";
+
+console.log("Shared utilities import successful");
 
 // Send debug messages back to main thread
 function sendDebug(message) {
@@ -9,8 +13,16 @@ function sendDebug(message) {
     });
 }
 
+console.log("Worker functions defined");
+
 self.onmessage = async (e) => {
+    console.log("Worker received message");
     try {
+        // Try dynamic import for WebMMuxer
+        console.log("Attempting dynamic import of WebMMuxer...");
+        const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/webm-muxer@5/+esm");
+        console.log("Muxer import successful");
+
         const {
             displaySettings,
             timeFormat,
@@ -37,8 +49,20 @@ self.onmessage = async (e) => {
         const renderingCanvas = new OffscreenCanvas(width, height);
         const renderingCtx = renderingCanvas.getContext("2d");
 
-        const muxer = new WebMMuxer({
-            target: "buffer",
+        // Load the font for the worker
+        try {
+            const fontResponse = await fetch('./fonts/DSEG7-Classic/DSEG7Classic-Italic.woff2');
+            const fontBuffer = await fontResponse.arrayBuffer();
+            const fontFace = new FontFace(displaySettings.font, fontBuffer);
+            await fontFace.load();
+            self.fonts.add(fontFace);
+            sendDebug("Font loaded successfully in worker");
+        } catch (fontError) {
+            sendDebug(`Font loading failed: ${fontError.message}`);
+        }
+
+        const muxer = new Muxer({
+            target: new ArrayBufferTarget(),
             video: {
                 codec: "V_VP8",
                 width,
@@ -48,7 +72,11 @@ self.onmessage = async (e) => {
         });
 
         const encoder = new VideoEncoder({
-            output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+            output: (chunk, meta) => {
+                sendDebug(`VideoEncoder output: chunk type=${chunk.type}, timestamp=${chunk.timestamp}, duration=${chunk.duration}`);
+                muxer.addVideoChunk(chunk, meta);
+                sendDebug("Video chunk added to muxer");
+            },
             error: err => sendDebug(`VideoEncoder error: ${err}`)
         });
 
@@ -76,15 +104,24 @@ self.onmessage = async (e) => {
             const t = frame / fps;
 
             // TODO don't update if timer not running
-            renderingTimerBase.updateElapsedTime(frameDisplayTime(frame))
-            drawCanvasTimer(renderingCtx, renderingTimerBase.getDigits(), renderingTimerBase.visibility, displaySettings);
+            const displayTime = frameDisplayTime(frame);
+            renderingTimerBase.updateElapsedTime(displayTime);
+            const digits = renderingTimerBase.getDigits();
+            
+            if (frame % 100 == 0) {
+                sendDebug(`Rendering frame ${frame} out of ${totalFrames}`);
+            }
+
+            drawCanvasTimer(renderingCtx, digits, renderingTimerBase.visibility, displaySettings);
 
             const videoFrame = new VideoFrame(renderingCanvas, {
                 timestamp: frame * frameDurationUs,
                 duration: frameDurationUs
             });
 
+            sendDebug(`Encoding frame ${frame}`);
             encoder.encode(videoFrame);
+            sendDebug(`Frame ${frame} encoded`);
             videoFrame.close();
 
             // Yield occasionally (prevents worker lockup)
@@ -100,9 +137,27 @@ self.onmessage = async (e) => {
         sendDebug("Frame rendering complete. Finalizing video...");
 
         await encoder.flush();
+        sendDebug("Encoder flushed");
         encoder.close();
+        sendDebug("Encoder closed");
 
-        const { buffer } = muxer.finalize();
+        const finalizedResult = await muxer.finalize();
+        sendDebug(`Muxer finalize result: ${finalizedResult}`);
+
+        // Try to get buffer from the target
+        const targetBuffer = muxer.target?.finalize?.() || muxer.target?.buffer;
+        sendDebug(`Target buffer: ${targetBuffer}`);
+
+        let buffer;
+        if (targetBuffer instanceof ArrayBuffer) {
+            buffer = targetBuffer;
+            sendDebug("Using target buffer as ArrayBuffer");
+        } else if (finalizedResult instanceof ArrayBuffer) {
+            buffer = finalizedResult;
+            sendDebug("Using finalized result as ArrayBuffer");
+        } else {
+            throw new Error(`Cannot get buffer. Finalize result: ${finalizedResult}, Target: ${muxer.target}`);
+        }
 
         const blob = new Blob([buffer], { type: "video/webm" });
 
