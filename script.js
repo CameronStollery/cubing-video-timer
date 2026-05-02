@@ -282,7 +282,7 @@ updateStopTime();     // set initial stop time from input values
 let speedMultiplier;
 function updateSpeed(){
     resetTimer();
-    speedMultiplier = speedInput.value;
+    speedMultiplier = speedInput.value > 0 ? speedInput.value : 1;  // force value to be positive
 }
 updateSpeed();     // set initial speed multiplier from input value
 
@@ -421,34 +421,34 @@ document.fonts.addEventListener("loadingdone", () => {
     redrawOnScreenCanvasTimer();
 });
 
-
 // Video rendering code (initially copied straight from chatgpt)
-// const renderButton = document.getElementById("render");
+const renderButton = document.getElementById("render");
 
-// renderButton.onclick = () => {
-//     const worker = new Worker("./worker.js", { type: "module" });
+renderButton.onclick = () => {
+    console.log("Sending details of video to worker node for rendering.")
 
-//     // draw function needs ctx, digits, visibility, settings
-//     // + need video settings
-//     worker.postMessage({
-//         displaySettings: displaySettings,
-//         timeFormat: formatString,
-//         fps: 30,    // TODO make configurable
-//         timerDuration: 10,
-//         preDelay: preDelayTime,
-//         postDelay: postDelayTime,
-//         speedMultiplier: speedMultiplier
-//     });
+    const worker = new Worker("./worker.js", { type: "module" });
 
-//     worker.onmessage = (e) => {
-//         const blob = e.data;
+    worker.postMessage({
+        displaySettings: displaySettings,
+        timeFormat: formatString,
+        fps: 60,    // TODO make configurable
+        speedMultiplier: speedMultiplier,
+        stopTime: stopTime / 1000,         // variables are in ms, convert to s for rendering
+        preDelayTime: preDelayTime / 1000,
+        postDelayTime: postDelayTime / 1000
+    });
 
-//         const url = URL.createObjectURL(blob);
-//         const a = document.createElement("a");
-//         a.href = url;
-//         a.download = "timer.webm";
-//         a.click();
+    worker.onmessage = (e) => {
+        console.log("Rendering complete. Video is ready to download.")
 
-//         worker.terminate();
-//     };
-// };
+        const blob = e.data;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "timer.webm";
+        a.click();
+
+        worker.terminate();
+    };
+};
