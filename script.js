@@ -5,17 +5,20 @@ const stopButton = document.getElementById('stop');
 const resetButton = document.getElementById('reset');
 
 // Controls
-const delayInput = document.getElementById('delay');
 const stopInputHours = document.getElementById('stopTimerHours');
 const stopInputMinutes = document.getElementById('stopTimerMinutes');
 const stopInputSeconds = document.getElementById('stopTimerSeconds');
 const speedInput = document.getElementById('speedmult');
 const formatSelector = document.getElementById('timeformat');
+
 const textColorInput = document.getElementById('textcolour');
 const bgColorInput = document.getElementById('bgcolour');
 const timerFontInput = document.getElementById('font-picker');
 const boldToggle = document.getElementById('bold-toggle');
 const italicToggle = document.getElementById('italic-toggle');
+
+const preDelayInput = document.getElementById('pre-delay');
+const postDelayInput = document.getElementById('post-delay');
 
 const digitKeys = [
     'hour1',
@@ -67,6 +70,7 @@ const displaySettings = {
 }
 
 // Function to update a canvas timer
+// TODO move things outside this so that font doesn't need to be reset each time
 function drawCanvasTimer(ctx, digits, visibility, settings) {
     ctx.fillStyle = settings.bgColor;
     ctx.fillRect(0, 0, settings.width, settings.height);
@@ -281,24 +285,19 @@ function updateSpeed(){
 }
 updateSpeed();     // set initial speed multiplier from input value
 
-let delayTime;
-function updateDelay(){
+let preDelayTime;
+function updatePreDelay(){
     resetTimer();
-    delayTime = delayInput.value * 1000;
+    preDelayTime = preDelayInput.value * 1000;
 }
-updateDelay();     // set initial delay time from input value
+updatePreDelay();     // set initial delay before timer starts from input value
 
-// function startDelay(){
-//     startDelayTime = Date.now();
-
-//     delayTimerInterval = setInterval( ()=> {
-//         elapsedDelayTime = Date.now() - startDelayTime;
-//         if (elapsedDelayTime > delayTime) {
-//             clearInterval(delayTimerInterval);
-//             startTimer();
-//         }
-//     }, 10);
-// }
+let postDelayTime;
+function updatePostDelay(){
+    resetTimer();
+    postDelayTime = postDelayInput.value * 1000;
+}
+updatePostDelay();     // set initial delay before video ends after timer stops from input value
 
 // Completely refresh onscreen canvas - necessary? suggested by chatgpt
 // function redrawOnScreenCanvas() {
@@ -352,12 +351,13 @@ function resetTimer(){
 startButton.addEventListener('click', startTimer);
 stopButton.addEventListener('click', stopTimer);
 resetButton.addEventListener('click', resetTimer);
-delayInput.addEventListener('change', updateDelay);
 stopInputHours.addEventListener('change', updateStopTime);
 stopInputMinutes.addEventListener('change', updateStopTime);
 stopInputSeconds.addEventListener('change', updateStopTime);
 speedInput.addEventListener('change', updateSpeed);
 formatSelector.addEventListener('change', updateTimeFormat);
+preDelayInput.addEventListener('change', updatePreDelay);
+postDelayInput.addEventListener('change', updatePostDelay);
 
 // If the time format selector is changed to a TomSelect dropdown, the updateTimeFormat function will need to be updated to get the selected index/value from TomSelect instead of a regular select element. The event listener for the format selector will also need to be updated to listen for the 'change' event from TomSelect.
 // new TomSelect('#timeformat', {});
@@ -419,3 +419,35 @@ function updateFontStyle() {
 document.fonts.addEventListener("loadingdone", () => {
     redrawOnScreenCanvasTimer();
 });
+
+
+// // Video rendering code (initially copied straight from chatgpt)
+// const btn = document.getElementById("render");
+
+// btn.onclick = () => {
+//     const worker = new Worker("./worker.js", { type: "module" });
+
+//     // TODO fix this
+//     worker.postMessage({
+//         width: 800,
+//         height: 300,
+//         fps: 30,
+//         duration: 10,
+//         playbackSpeed: 10,
+//         stopAt: 120,
+//         preDelay: 0,    // TODO configurable
+//         postDelay: 0
+//     });
+
+//     worker.onmessage = (e) => {
+//         const blob = e.data;
+
+//         const url = URL.createObjectURL(blob);
+//         const a = document.createElement("a");
+//         a.href = url;
+//         a.download = "timer.webm";
+//         a.click();
+
+//         worker.terminate();
+//     };
+// };

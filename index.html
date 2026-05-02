@@ -24,98 +24,111 @@
     </div>
     
     <div id="controls">
-        <div class="control">
-            <label for="delay">Delay before timer starts:</label>
-            <input type="number" id="delay" value="0" min="0" max="999">
-            <label for="delay">seconds</label>
+        <div id="timer-controls" class="control-row">
+            <div class="control">
+                <label for="stopTimerHours">Stop timer at:</label>
+                <input type="number" id="stopTimerHours" value="0" min="0" max="99" step="1">
+                <label for="stopTimerHours">h</label>
+                <input type="number" id="stopTimerMinutes" value="0" min="0" max="59" step="1">
+                <label for="stopTimerMinutes">m</label>
+                <input type="number" id="stopTimerSeconds" value="6.25" min="0" max="59.999">
+                <label for="stopTimerSeconds">s</label>
+            </div>
+    
+            <div class="control">
+                <label for="speedmult">Speed multiplier:</label>
+                <input type="number" id="speedmult" value="1" min="0" step="0.1">
+            </div>
+    
+            <div class="control">
+                <label for="timeformat">Time format:</label>
+                <select id="timeformat" name="timeformat">
+                    <option>S</option>
+                    <option>S.X</option>
+                    <option selected>S.XX</option>
+                    <option>S.XXX</option>
+                    <option>SS</option>
+                    <option>SS.X</option>
+                    <option>SS.XX</option>
+                    <option>SS.XXX</option>
+                    <option>M:SS</option>
+                    <option>M:SS.X</option>
+                    <option>M:SS.XX</option>
+                    <option>M:SS.XXX</option>
+                    <option>MM:SS</option>
+                    <option>MM:SS.X</option>
+                    <option>MM:SS.XX</option>
+                    <option>MM:SS.XXX</option>
+                    <option>H:MM:SS</option>
+                    <option>H:MM:SS.X</option>
+                    <option>H:MM:SS.XX</option>
+                    <option>H:MM:SS.XXX</option>
+                    <option>HH:MM:SS</option>
+                    <option>HH:MM:SS.X</option>
+                    <option>HH:MM:SS.XX</option>
+                    <option>HH:MM:SS.XXX</option>
+                </select>
+            </div>
         </div>
 
-        <div class="control">
-            <label for="stopTimerHours">Stop timer at:</label>
-            <input type="number" id="stopTimerHours" value="0" min="0" max="99" step="1">
-            <label for="stopTimerHours">h</label>
-            <input type="number" id="stopTimerMinutes" value="0" min="0" max="59" step="1">
-            <label for="stopTimerMinutes">m</label>
-            <input type="number" id="stopTimerSeconds" value="6.25" min="0" max="59.999">
-            <label for="stopTimerSeconds">s</label>
+        <div id="display-controls" class="control-row">
+            <div class="control">
+                <label for="textcolour">Text colour:</label>
+                <input type="color" id="textcolour" name="textcolour" value="#ff0000">
+            </div>
+            
+            <div class="control">
+                <label for="bgcolour">Background colour:</label>
+                <input type="color" id="bgcolour" name="bgcolour" value="#000000">
+            </div>
+            
+            <div class="control">
+                <label for="font-picker">Timer font:</label>
+                <select id="font-picker">
+                    <option value="Open Sans" data-font="Comic Sans MS">Open Sans</option>
+                    <option value="Roboto" data-font="Roboto">Roboto</option>
+                    <option value="Lato" data-font="Lato">Lato</option>
+                    <option value="Poppins" data-font="Poppins">Poppins</option>
+                    <option value="Inter" data-font="Inter">Inter</option>
+                    <option value="Segoe UI" data-font="Segoe UI">Segoe UI</option>
+                    <option value="Arial" data-font="Arial">Arial</option>
+                    <option value="Helvetica" data-font="Helvetica">Helvetica</option>
+                    <option value="Verdana" data-font="Verdana">Verdana</option>
+                    <option value="Tahoma" data-font="Tahoma">Tahoma</option>
+                    <option value="Comic Sans MS" data-font="Comic Sans MS">Comic Sans</option>
+                    <option value="Garamond" data-font="Garamond">Garamond</option>
+                    <option value="Times New Roman" data-font="Times New Roman">Times New Roman</option>
+                    <option value="Courier New" data-font="Courier New">Courier New</option>
+                    <option value="7-Segment Display" data-font="7-Segment Display" selected>7-Segment Display</option>
+                    <option value="7-Segment Display Mini" data-font="7-Segment Display Mini">7-Segment Display Mini</option>
+                    <option value="7-Segment Display Light" data-font="7-Segment Display Light">7-Segment Display Light</option>
+                    <option value="7-Segment Display Mini Light" data-font="7-Segment Display Mini Light">7-Segment Display Mini Light</option>
+                    <option value="14-Segment Display" data-font="14-Segment Display">14-Segment Display</option>
+                    <option value="14-Segment Display Mini" data-font="14-Segment Display Mini">14-Segment Display Mini</option>
+                    <option value="14-Segment Display Light" data-font="14-Segment Display Light">14-Segment Display Light</option>
+                    <option value="14-Segment Display Mini Light" data-font="14-Segment Display Mini Light">14-Segment Display Mini Light</option>
+                </select>
+            </div>
+
+            <div class="control">
+                <button id="bold-toggle" class="font-toggle">B</button>
+                <button id="italic-toggle" class="font-toggle active">I</button>
+            </div>
         </div>
 
-        <div class="control">
-            <label for="speedmult">Speed multiplier:</label>
-            <input type="number" id="speedmult" value="1" min="0" step="0.1">
-        </div>
-
-        <div class="control">
-            <label for="timeformat">Time format:</label>
-            <select id="timeformat" name="timeformat">
-                <option>S</option>
-                <option>S.X</option>
-                <option selected>S.XX</option>
-                <option>S.XXX</option>
-                <option>SS</option>
-                <option>SS.X</option>
-                <option>SS.XX</option>
-                <option>SS.XXX</option>
-                <option>M:SS</option>
-                <option>M:SS.X</option>
-                <option>M:SS.XX</option>
-                <option>M:SS.XXX</option>
-                <option>MM:SS</option>
-                <option>MM:SS.X</option>
-                <option>MM:SS.XX</option>
-                <option>MM:SS.XXX</option>
-                <option>H:MM:SS</option>
-                <option>H:MM:SS.X</option>
-                <option>H:MM:SS.XX</option>
-                <option>H:MM:SS.XXX</option>
-                <option>HH:MM:SS</option>
-                <option>HH:MM:SS.X</option>
-                <option>HH:MM:SS.XX</option>
-                <option>HH:MM:SS.XXX</option>
-            </select>
-        </div>
-
-        <div class="control">
-            <label for="textcolour">Text colour:</label>
-            <input type="color" id="textcolour" name="textcolour" value="#ff0000">
-        </div>
-        
-        <div class="control">
-            <label for="bgcolour">Background colour:</label>
-            <input type="color" id="bgcolour" name="bgcolour" value="#000000">
-        </div>
-        
-        <div class="control">
-            <label for="font-picker">Timer font:</label>
-            <select id="font-picker">
-                <option value="Open Sans" data-font="Comic Sans MS">Open Sans</option>
-                <option value="Roboto" data-font="Roboto">Roboto</option>
-                <option value="Lato" data-font="Lato">Lato</option>
-                <option value="Poppins" data-font="Poppins">Poppins</option>
-                <option value="Inter" data-font="Inter">Inter</option>
-                <option value="Segoe UI" data-font="Segoe UI">Segoe UI</option>
-                <option value="Arial" data-font="Arial">Arial</option>
-                <option value="Helvetica" data-font="Helvetica">Helvetica</option>
-                <option value="Verdana" data-font="Verdana">Verdana</option>
-                <option value="Tahoma" data-font="Tahoma">Tahoma</option>
-                <option value="Comic Sans MS" data-font="Comic Sans MS">Comic Sans</option>
-                <option value="Garamond" data-font="Garamond">Garamond</option>
-                <option value="Times New Roman" data-font="Times New Roman">Times New Roman</option>
-                <option value="Courier New" data-font="Courier New">Courier New</option>
-                <option value="7-Segment Display" data-font="7-Segment Display" selected>7-Segment Display</option>
-                <option value="7-Segment Display Mini" data-font="7-Segment Display Mini">7-Segment Display Mini</option>
-                <option value="7-Segment Display Light" data-font="7-Segment Display Light">7-Segment Display Light</option>
-                <option value="7-Segment Display Mini Light" data-font="7-Segment Display Mini Light">7-Segment Display Mini Light</option>
-                <option value="14-Segment Display" data-font="14-Segment Display">14-Segment Display</option>
-                <option value="14-Segment Display Mini" data-font="14-Segment Display Mini">14-Segment Display Mini</option>
-                <option value="14-Segment Display Light" data-font="14-Segment Display Light">14-Segment Display Light</option>
-                <option value="14-Segment Display Mini Light" data-font="14-Segment Display Mini Light">14-Segment Display Mini Light</option>
-            </select>
-        </div>
-        
-        <div class="control">
-            <button id="bold-toggle" class="font-toggle">B</button>
-            <button id="italic-toggle" class="font-toggle active">I</button>
+        <div id="video-controls" class="control-row">
+            <!-- TODO radio buttons for FPS -->
+            <div class="control">
+                <label for="pre-delay">Delay before timer starts:</label>
+                <input type="number" id="pre-delay" value="1" min="0" max="999">
+                <label for="pre-delay">seconds</label>
+            </div>
+            <div class="control">
+                <label for="post-delay">End video</label>
+                <input type="number" id="post-delay" value="5" min="0" max="999">
+                <label for="post-delay">seconds after timer finishes</label>
+            </div>
+            <!-- <button id="render">Render Video</button> -->
         </div>
     </div>
 
