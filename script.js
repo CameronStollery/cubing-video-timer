@@ -70,7 +70,7 @@ const displaySettings = {
 }
 
 // Function to update a canvas timer
-// TODO move things outside this so that font doesn't need to be reset each time
+// TODO move things outside this so that font doesn't need to be reset each time?
 function drawCanvasTimer(ctx, digits, visibility, settings) {
     ctx.fillStyle = settings.bgColor;
     ctx.fillRect(0, 0, settings.width, settings.height);
@@ -125,9 +125,10 @@ class TimerBase {
         ms: false
     };
 
-    constructor() {
+    constructor(timerFormatString) {
         this.elapsedTime = 0;
         this.visibility = {...TimerBase.defaultVisibility};
+        this.formatString = timerFormatString
 
         // after this many milliseconds, more digits will be needed to show full time
         this.updateVisibilityThreshold = 10 * 1000;
@@ -237,10 +238,12 @@ class TimerBase {
 
         this.visibilityChanged = true;
     }
-};
 
-// Interactive on-screen timer controlled with buttons
-const interactiveTimerBase = new TimerBase();
+    updateFormat(timerFormatString) {
+        this.formatString = timerFormatString;
+        this.updateVisibility;
+    }
+};
 
 // Redraw the on-screen canvas timer
 function redrawOnScreenCanvasTimer() {
@@ -253,15 +256,18 @@ let startTime = 0;
 let elapsedTime = 0;
 
 // Variables for controls and methods to update them 
-let formatString;
-// update the global time format the applies to all timers (DOM or canvas)
+
+let formatString = formatSelector.value;
+
+// Interactive on-screen timer controlled with buttons
+const interactiveTimerBase = new TimerBase(formatString);
+
+// update the global time format the applies to both timers (on-screen interactive and off-screen rendering)
 function updateTimeFormat(){
     formatString = formatSelector.value;
-
-    interactiveTimerBase.updateVisibility();
+    interactiveTimerBase.updateTimeFormat(formatString);
     redrawOnScreenCanvasTimer();
 }
-updateTimeFormat();     // set initial format from selector value
 
 let stopTime;
 function updateStopTime(){
