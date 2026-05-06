@@ -51,6 +51,7 @@ self.onmessage = async (e) => {
 
         // Load the font for the worker
         try {
+            // TODO make this load all fonts
             const fontResponse = await fetch('./fonts/DSEG7-Classic/DSEG7Classic-Italic.woff2');
             const fontBuffer = await fontResponse.arrayBuffer();
             const fontFace = new FontFace(displaySettings.font, fontBuffer);
@@ -73,9 +74,9 @@ self.onmessage = async (e) => {
 
         const encoder = new VideoEncoder({
             output: (chunk, meta) => {
-                sendDebug(`VideoEncoder output: chunk type=${chunk.type}, timestamp=${chunk.timestamp}, duration=${chunk.duration}`);
+                // sendDebug(`VideoEncoder output: chunk type=${chunk.type}, timestamp=${chunk.timestamp}, duration=${chunk.duration}`);
                 muxer.addVideoChunk(chunk, meta);
-                sendDebug("Video chunk added to muxer");
+                // sendDebug("Video chunk added to muxer");
             },
             error: err => sendDebug(`VideoEncoder error: ${err}`)
         });
@@ -99,17 +100,18 @@ self.onmessage = async (e) => {
             return Math.min(timerRunning * speedMultiplier, stopTime);
         }
 
-        // TODO put in delays before/after timer start
         for (let frame = 0; frame < totalFrames; frame++) {
             const t = frame / fps;
 
             // TODO don't update if timer not running
             const displayTime = frameDisplayTime(frame);
-            renderingTimerBase.updateElapsedTime(displayTime);
+            renderingTimerBase.updateElapsedTime(displayTime * 1000);       // convert to ms
             const digits = renderingTimerBase.getDigits();
             
             if (frame % 100 == 0) {
-                sendDebug(`Rendering frame ${frame} out of ${totalFrames}`);
+                sendDebug(`Rendering frame ${frame} out of ${totalFrames}. Timer should display time ${displayTime}`);
+                sendDebug(`renderingTimerBase has elapsedTime = ${renderingTimerBase.elapsedTime}`);
+                sendDebug(`Time shown by digits: ${digits.sec1}${digits.sec2}.${digits.ds}${digits.cs}`);
             }
 
             drawCanvasTimer(renderingCtx, digits, renderingTimerBase.visibility, displaySettings);
@@ -119,18 +121,18 @@ self.onmessage = async (e) => {
                 duration: frameDurationUs
             });
 
-            sendDebug(`Encoding frame ${frame}`);
+            if (frame % 100 == 0) {
+                sendDebug(`Encoding frame ${frame}`);
+            }
             encoder.encode(videoFrame);
-            sendDebug(`Frame ${frame} encoded`);
+            if (frame % 100 == 0) {
+                sendDebug(`Frame ${frame} encoded`);
+            }
             videoFrame.close();
 
             // Yield occasionally (prevents worker lockup)
             if (frame % 2000 === 0) {
                 await new Promise(r => setTimeout(r, 0));
-            }
-
-            if (frame % 100 == 0) {
-                sendDebug(`Rendering frame ${frame} out of ${totalFrames}`);
             }
         }
 

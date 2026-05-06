@@ -88,7 +88,7 @@ export class TimerBase {
     };
 
     constructor(timerFormatString) {
-        this.elapsedTime = 0;
+        this.elapsedTime = 0;       // recorded in ms
         this.visibility = {...TimerBase.defaultVisibility};
         this.formatString = timerFormatString
 
