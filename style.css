@@ -5,63 +5,19 @@ body {
     flex-direction: column;
     justify-content: center;
     min-height: 100vh;
-    overflow: hidden;
     align-items: center;
 }
 
-#timer{
-    font-family: '7-Segment Display', monospace, sans-serif;
-    font-style: italic;
-    background: #000000;
-    font-size: 7rem;
-    color: #ff0000;
-    text-align: center;
-    margin: 2rem;
-    padding: 2rem 2rem 3rem;
-    border-radius: 2rem;
-    display: flex;
+canvas {
+    width: 60%;
+    height: auto;
+    margin-top: 100px;
 }
 
-.digit{
-    width: 1ch;
-    padding: 0;
-    margin: 0;
-}
 
-#hour1 {
-    visibility: hidden;
-}
-
-#hour2 {
-    visibility: hidden;
-}
-
-#hmSep {
-    visibility: hidden;
-}
-
-#min1 {
-    visibility: hidden;
-}
-
-#min2 {
-    visibility: hidden;
-}
-
-#msSep {
-    visibility: hidden;
-}
-
-#ms {
-    visibility: hidden;
-}
-
-#buttons {
-    display: flex;
-    justify-content: center;
-}
 
 .timer-button {
+    /* min-height: 45px; */
     background-color: #c9d8ff;
     border: none;
     font-size: 2rem;
@@ -84,13 +40,37 @@ button[disabled] {
     cursor: default;
 }
 
+#controls {
+    display: contents;
+}
+
 .control-row {
-    display: block;
+    /* display: block; */
     background-color: whitesmoke;
     border-radius: 15px;
-    padding: 1rem;
+    padding: 0.6rem 1rem 0rem;
     box-shadow: 2px 2px 10px rgba(58, 51, 51, 0.3);
-    margin: 50px;
+    margin: 20px;
+    width: 80%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap; 
+    justify-content: space-between;
+}
+
+.control-row > * {
+  width: auto;
+  display: inline-block;
+}
+
+.control-row input {
+    width: 120px;
+}
+
+.control-row label {
+  display: inline-block;
+  width: auto;
 }
 
 .control {
@@ -98,14 +78,22 @@ button[disabled] {
     margin: 1rem;
 }
 
-#speedmult {
-    width: 60px;
+.control > * {
+  width: auto;
+  display: inline-block;
 }
 
+/* #speedmult {
+    width: 60px;
+} */
+
 #font-picker + .ts-wrapper {
-    width: 300px;
-    display: inline;
+    width: 400px;
 }
+
+/* input {
+    min-width: 100px;
+} */
 
 #bold-toggle {
     font-weight: bold;
@@ -146,17 +134,17 @@ button[disabled] {
   color: #555;
 }
 
-/* @media (max-width: 800px) {
-    #timer{
-        font-size: 4rem;
-        width: 350px;
+@media (max-width: 1200px) {
+    /* #controls {
+        display: flex;
+        flex-direction: column;
+    } */
+
+    canvas {
+        width: 90%;
     }
 
-    button {
-        font-size: calc(20px + (30 - 20) * ((100vw - 320px) / (1200 - 320)));
-        padding: calc(20px + (50 - 20) * ((100vw - 320px) / (1200 - 320)));
+    .control-row {
+        width: 90%;
     }
-} */
-
-
-/* @bycapwan */ 
+}

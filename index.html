@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width,
     initial-scale=1.0">
     <title>Cubing Video Timer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="fonts.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i|Roboto:400,400i,700,700i|Lato:400,400i,700,700i|Poppins:400,400i,700,700i|Inter:400,400i,700,700i&display=swap">
@@ -15,7 +16,6 @@
 
 <body>
     <canvas id="onscreen-timer-canvas" width="1200" height="300"></canvas>
-    <!-- <button id="record">Record</button> -->
 
     <div id="buttons">
         <button id="start" class="timer-button">Start</button>
@@ -108,9 +108,6 @@
                     <option value="14-Segment Display Light" data-font="14-Segment Display Light">14-Segment Display Light</option>
                     <option value="14-Segment Display Mini Light" data-font="14-Segment Display Mini Light">14-Segment Display Mini Light</option>
                 </select>
-            </div>
-
-            <div class="control">
                 <button id="bold-toggle" class="font-toggle">B</button>
                 <button id="italic-toggle" class="font-toggle active">I</button>
             </div>
