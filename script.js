@@ -250,13 +250,32 @@ renderButton.onclick = () => {
 
         console.log("Message posted to worker");
 
+        // Collect chunks for streaming reassembly
+        const chunks = new Map(); // position -> Uint8Array
+        let finalBuffer = null;
+
         worker.onmessage = (e) => {
             if (e.data.type === 'debug') {
                 console.log("[Worker Debug]", e.data.message);
+            } else if (e.data.type === 'chunk') {
+                // Store chunk at its position
+                chunks.set(e.data.position, e.data.data);
             } else if (e.data.type === 'complete') {
-                console.log("Rendering complete. Video is ready to download.")
+                console.log("Rendering complete. Assembling video from chunks...");
 
-                const blob = e.data.blob;
+                const fileSize = e.data.fileSize;
+                console.log(`Total file size: ${fileSize} bytes, Received ${chunks.size} chunks`);
+
+                // Allocate final buffer
+                finalBuffer = new Uint8Array(fileSize);
+
+                // Write all chunks to correct positions
+                for (const [position, data] of chunks.entries()) {
+                    finalBuffer.set(data, position);
+                }
+
+                // Create blob and download
+                const blob = new Blob([finalBuffer], { type: "video/webm" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
@@ -264,6 +283,7 @@ renderButton.onclick = () => {
                 a.click();
 
                 worker.terminate();
+                console.log("Video download initiated.");
             }
         };
     } catch (error) {

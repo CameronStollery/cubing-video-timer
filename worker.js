@@ -5,6 +5,9 @@ import { TimerBase, drawCanvasTimer } from "./shared-timer-utils.js";
 
 console.log("Shared utilities import successful");
 
+// Dynamic import marker for MediaBunny
+const MEDIABUNNY_CDN = "https://cdn.jsdelivr.net/npm/mediabunny@1/+esm";
+
 // Send debug messages back to main thread
 function sendDebug(message) {
     self.postMessage({
@@ -18,10 +21,23 @@ console.log("Worker functions defined");
 self.onmessage = async (e) => {
     console.log("Worker received message");
     try {
-        // Try dynamic import for WebMMuxer
-        console.log("Attempting dynamic import of WebMMuxer...");
-        const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/webm-muxer@5/+esm");
-        console.log("Muxer import successful");
+        // Try dynamic import for MediaBunny
+        console.log("Attempting dynamic import of MediaBunny...");
+        sendDebug("Starting MediaBunny import from CDN...");
+        let Output, WebMOutputFormat, StreamTarget, EncodedVideoPacketSource, EncodedPacket;
+        try {
+            const mediabunny = await import(MEDIABUNNY_CDN);
+            Output = mediabunny.Output;
+            WebMOutputFormat = mediabunny.WebMOutputFormat;
+            StreamTarget = mediabunny.StreamTarget;
+            EncodedVideoPacketSource = mediabunny.EncodedVideoPacketSource;
+            EncodedPacket = mediabunny.EncodedPacket;
+            console.log("MediaBunny import successful");
+            sendDebug("MediaBunny import successful");
+        } catch (importError) {
+            sendDebug(`MediaBunny import failed: ${importError.message}`);
+            throw new Error(`Failed to import MediaBunny: ${importError.message}`);
+        }
 
         const {
             displaySettings,
@@ -62,21 +78,51 @@ self.onmessage = async (e) => {
             sendDebug(`Font loading failed: ${fontError.message}`);
         }
 
-        const muxer = new Muxer({
-            target: new ArrayBufferTarget(),
-            video: {
-                codec: "V_VP8",
-                width,
-                height,
-                frameRate: fps
+        // Create a WritableStream that sends chunks back to main thread
+        let totalFileSize = 0;
+        const writable = new WritableStream({
+            write(chunk) {
+                // chunk is a StreamTargetChunk: { data: Uint8Array, position: number }
+                totalFileSize = Math.max(totalFileSize, chunk.position + chunk.data.length);
+                self.postMessage({
+                    type: 'chunk',
+                    position: chunk.position,
+                    data: chunk.data
+                });
             }
         });
 
+        // Create MediaBunny Output with streaming
+        const output = new Output({
+            format: new WebMOutputFormat({
+                appendOnly: true  // Ensures monotonic writes, simplifies reassembly
+            }),
+            target: new StreamTarget(writable)
+        });
+
+        // Create video packet source for VP8
+        const videoPacketSource = new EncodedVideoPacketSource('vp8');
+        output.addVideoTrack(videoPacketSource, { frameRate: fps });
+
+        // Start output
+        await output.start();
+        sendDebug("Output started. Creating encoder...");
+
+        let isFirstChunk = true;
         const encoder = new VideoEncoder({
-            output: (chunk, meta) => {
-                // sendDebug(`VideoEncoder output: chunk type=${chunk.type}, timestamp=${chunk.timestamp}, duration=${chunk.duration}`);
-                muxer.addVideoChunk(chunk, meta);
-                // sendDebug("Video chunk added to muxer");
+            output: async (chunk, meta) => {
+                try {
+                    const packetOptions = {};
+                    if (isFirstChunk && meta?.decoderConfig) {
+                        packetOptions.decoderConfig = meta.decoderConfig;
+                        isFirstChunk = false;
+                    }
+
+                    const packet = EncodedPacket.fromEncodedChunk(chunk, packetOptions);
+                    await videoPacketSource.add(packet);
+                } catch (err) {
+                    sendDebug(`Error creating/adding video packet: ${err.message}`);
+                }
             },
             error: err => sendDebug(`VideoEncoder error: ${err}`)
         });
@@ -102,8 +148,6 @@ self.onmessage = async (e) => {
 
         for (let frame = 0; frame < totalFrames; frame++) {
             const t = frame / fps;
-
-            // TODO don't update if timer not running
             const displayTime = frameDisplayTime(frame);
             renderingTimerBase.updateElapsedTime(displayTime * 1000);       // convert to ms
             const digits = renderingTimerBase.getDigits();
@@ -143,32 +187,20 @@ self.onmessage = async (e) => {
         encoder.close();
         sendDebug("Encoder closed");
 
-        const finalizedResult = await muxer.finalize();
-        sendDebug(`Muxer finalize result: ${finalizedResult}`);
+        // Close the video packet source
+        videoPacketSource.close();
+        sendDebug("Video packet source closed");
 
-        // Try to get buffer from the target
-        const targetBuffer = muxer.target?.finalize?.() || muxer.target?.buffer;
-        sendDebug(`Target buffer: ${targetBuffer}`);
+        // Finalize the output - this will close the WritableStream
+        await output.finalize();
+        sendDebug("Output finalized");
 
-        let buffer;
-        if (targetBuffer instanceof ArrayBuffer) {
-            buffer = targetBuffer;
-            sendDebug("Using target buffer as ArrayBuffer");
-        } else if (finalizedResult instanceof ArrayBuffer) {
-            buffer = finalizedResult;
-            sendDebug("Using finalized result as ArrayBuffer");
-        } else {
-            throw new Error(`Cannot get buffer. Finalize result: ${finalizedResult}, Target: ${muxer.target}`);
-        }
-
-        const blob = new Blob([buffer], { type: "video/webm" });
-
-        sendDebug("Video rendering complete. Sending blob to main thread.");
-
+        // Send completion message with total file size
         self.postMessage({
             type: 'complete',
-            blob: blob
+            fileSize: totalFileSize
         });
+        sendDebug(`Video rendering complete. Total file size: ${totalFileSize} bytes`);
     } catch (error) {
         sendDebug(`ERROR in worker: ${error.message}\n${error.stack}`);
     }
